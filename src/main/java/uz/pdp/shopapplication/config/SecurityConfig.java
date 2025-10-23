@@ -35,24 +35,26 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        System.out.println("🛡️ Инициализация SecurityConfig...");
+
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.disable())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 🔹 разрешаем доступ ко всем статическим файлам
                         .requestMatchers(
                                 "/", "/index.html", "/login.html", "/register.html",
+                                "/products.html", "/addProduct.html",   // ✅ добавили
                                 "/css/**", "/js/**", "/images/**",
                                 "/auth/**"
                         ).permitAll()
-                        // 🔹 всё остальное требует авторизации
+                        .requestMatchers("/auth/me").authenticated()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
+        System.out.println("✅ JwtAuthenticationFilter добавлен в цепочку безопасности");
         return http.build();
     }
-
 }

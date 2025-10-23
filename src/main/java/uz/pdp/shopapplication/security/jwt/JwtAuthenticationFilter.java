@@ -27,26 +27,58 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        System.out.println("🔹 JwtFilter START — URI: " + request.getRequestURI());
-        String path = request.getServletPath();
-        if (path.startsWith("/auth")) {
+        String uri = request.getRequestURI();
+        System.out.println("🔹 JwtFilter START — URI: " + uri);
+
+        // ✅ Пропускаем только логин, регистрацию и статические ресурсы
+        if (uri.startsWith("/auth/login") ||
+                uri.startsWith("/auth/register") ||
+                uri.startsWith("/css") ||
+                uri.startsWith("/js") ||
+                uri.startsWith("/images") ||
+                uri.equals("/") ||
+                uri.endsWith(".html")) {
+
+            System.out.println("🟢 Пропускаем без токена: " + uri);
             filterChain.doFilter(request, response);
             return;
         }
 
+        // 🔸 Проверяем заголовок Authorization
         String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            System.out.println("🚫 Нет заголовка Authorization или формат неверный");
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
+        String token = header.substring(7);
+        System.out.println("✅ Получен токен: " + token);
+
+        try {
             if (jwtTokenProvider.validateToken(token)) {
                 String username = jwtTokenProvider.getUsernameFromToken(token);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                System.out.println("👤 Из токена извлечён пользователь: " + username);
 
-                var auth = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                    var auth = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    System.out.println("✅ Установлена аутентификация для пользователя: " + username);
+                }
+            } else {
+                System.out.println("🚫 Токен невалиден");
             }
+        } catch (Exception e) {
+            System.out.println("❌ Ошибка при обработке токена: " + e.getMessage());
         }
+
         filterChain.doFilter(request, response);
+        System.out.println("🔹 JwtFilter END — URI: " + uri);
     }
 }

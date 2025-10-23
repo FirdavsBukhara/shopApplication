@@ -3,60 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <title>Добавить товар</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; max-width: 600px; }
+        h2 { color: #333; }
+        form { display: flex; flex-direction: column; gap: 12px; }
+        input, textarea {
+            padding: 10px; font-size: 14px; border: 1px solid #ccc;
+            border-radius: 5px; width: 100%;
+        }
+        button {
+            background-color: #4CAF50; color: white; border: none;
+            padding: 10px; cursor: pointer; border-radius: 5px;
+        }
+        button:hover { background-color: #45a049; }
+        .back { text-decoration: none; color: #007bff; }
+        .logout { float: right; color: red; cursor: pointer; }
+        .message { margin-top: 15px; font-weight: bold; }
+    </style>
 </head>
 <body>
-<h2>Добавить товар</h2>
-<form id="addProductForm">
-    <label>Название:</label><br>
-    <input type="text" id="name" required><br><br>
 
-    <label>Описание:</label><br>
-    <textarea id="description"></textarea><br><br>
+<h2>Добавление нового товара</h2>
+<a href="index.html" class="back">← Назад к категориям</a>
+<span class="logout" onclick="logout()">Выйти</span>
 
-    <label>Цена:</label><br>
-    <input type="number" id="price" required><br><br>
+<form id="productForm">
+    <label>Название:</label>
+    <input type="text" id="name" required>
 
-    <label>URL изображения:</label><br>
-    <input type="text" id="imageUrl"><br><br>
+    <label>Описание:</label>
+    <textarea id="description" rows="3"></textarea>
 
-    <label>Категория:</label><br>
-    <select id="category"></select><br><br>
+    <label>Цена:</label>
+    <input type="number" id="price" required step="0.01">
 
-    <button type="submit">Добавить</button>
+    <label>URL изображения:</label>
+    <input type="text" id="imageUrl">
+
+    <button type="submit">Добавить товар</button>
 </form>
 
+<div class="message" id="message"></div>
+
 <script>
-    const token = localStorage.getItem("token");
-    if (!token) {
-        window.location.href = "/login.html";
-    }
+    async function addProduct(event) {
+        event.preventDefault();
 
-    async function loadCategories() {
-        const response = await fetch("http://localhost:8080/api/categories", {
-            headers: {
-                "Authorization": "Bearer " + token
-            }
-        });
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Вы не авторизованы!");
+            window.location.href = "/login.html";
+            return;
+        }
 
-        const categories = await response.json();
-        const select = document.getElementById("category");
-        categories.forEach(cat => {
-            const opt = document.createElement("option");
-            opt.value = cat.id;
-            opt.textContent = cat.name;
-            select.appendChild(opt);
-        });
-    }
+        const params = new URLSearchParams(window.location.search);
+        const categoryId = params.get("categoryId");
+        if (!categoryId) {
+            alert("Не выбрана категория!");
+            window.location.href = "/index.html";
+            return;
+        }
 
-    document.getElementById("addProductForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const dto = {
-            name: document.getElementById("name").value,
-            description: document.getElementById("description").value,
+        const product = {
+            name: document.getElementById("name").value.trim(),
+            description: document.getElementById("description").value.trim(),
             price: parseFloat(document.getElementById("price").value),
-            imageUrl: document.getElementById("imageUrl").value,
-            categoryId: parseInt(document.getElementById("category").value)
+            imageUrl: document.getElementById("imageUrl").value.trim(),
+            categoryId: parseInt(categoryId)
         };
 
         const response = await fetch("http://localhost:8080/api/products", {
@@ -65,18 +78,41 @@
                 "Content-Type": "application/json",
                 "Authorization": "Bearer " + token
             },
-            body: JSON.stringify(dto)
+            body: JSON.stringify(product)
         });
 
-        if (response.ok) {
-            alert("Товар успешно добавлен!");
-            window.location.href = "/index.html";
-        } else {
-            alert("Ошибка при добавлении товара");
-        }
-    });
+        const messageDiv = document.getElementById("message");
 
-    loadCategories();
+        if (response.status === 401) {
+            alert("Сессия истекла. Войдите снова.");
+            window.location.href = "/login.html";
+            return;
+        }
+
+        if (response.status === 403) {
+            messageDiv.style.color = "red";
+            messageDiv.textContent = "❌ У вас нет прав для добавления товара (требуется ADMIN).";
+            return;
+        }
+
+        if (!response.ok) {
+            messageDiv.style.color = "red";
+            messageDiv.textContent = "Ошибка при добавлении товара.";
+            return;
+        }
+
+        messageDiv.style.color = "green";
+        messageDiv.textContent = "✅ Товар успешно добавлен!";
+        document.getElementById("productForm").reset();
+    }
+
+    function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/login.html";
+    }
+
+    document.getElementById("productForm").addEventListener("submit", addProduct);
 </script>
+
 </body>
 </html>

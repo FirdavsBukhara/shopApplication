@@ -2,27 +2,73 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Товары</title>
+    <title>Товары категории</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h2 { color: #333; }
+        .product {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .product img {
+            max-width: 150px;
+            display: block;
+            margin-top: 10px;
+        }
+        .back { text-decoration: none; color: #007bff; }
+        .logout { float: right; color: red; cursor: pointer; }
+        .add-btn {
+            background-color: #4CAF50; color: white;
+            border: none; padding: 10px 15px;
+            border-radius: 5px; cursor: pointer;
+            margin-bottom: 15px;
+        }
+        .add-btn:hover { background-color: #45a049; }
+    </style>
 </head>
 <body>
-<h2>Список товаров</h2>
-<button onclick="goBack()">Назад</button>
-<div id="productList"></div>
+
+<h2 id="categoryName">Товары</h2>
+<a href="index.html" class="back">← Назад к категориям</a>
+<span class="logout" onclick="logout()">Выйти</span>
+
+<div id="adminControls" style="margin-top: 20px;"></div>
+<div id="products"></div>
 
 <script>
     const token = localStorage.getItem("token");
     if (!token) {
+        alert("Вы не авторизованы!");
         window.location.href = "/login.html";
     }
 
     const params = new URLSearchParams(window.location.search);
     const categoryId = params.get("categoryId");
+    const categoryName = params.get("categoryName");
+
+    if (!categoryId) {
+        alert("Не выбрана категория!");
+        window.location.href = "/index.html";
+    }
+
+    document.getElementById("categoryName").textContent =
+        "Категория: " + (categoryName || "Без названия");
+
+    async function getUserRole() {
+        // 🔹 новый эндпоинт на бэке /auth/me должен возвращать текущего пользователя
+        const res = await fetch("http://localhost:8080/auth/me", {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        if (!res.ok) return null;
+        const user = await res.json();
+        return user.role || null;
+    }
 
     async function loadProducts() {
         const response = await fetch(`http://localhost:8080/api/products/category/${categoryId}`, {
-            headers: {
-                "Authorization": "Bearer " + token
-            }
+            headers: { "Authorization": "Bearer " + token }
         });
 
         if (response.status === 401) {
@@ -31,35 +77,56 @@
             return;
         }
 
-        const products = await response.json();
-        const container = document.getElementById("productList");
-        container.innerHTML = "";
+        const productsDiv = document.getElementById("products");
+        productsDiv.innerHTML = "";
 
+        if (!response.ok) {
+            productsDiv.textContent = "Ошибка при загрузке товаров.";
+            return;
+        }
+
+        const products = await response.json();
         if (products.length === 0) {
-            container.innerHTML = "<p>Нет товаров в этой категории</p>";
+            productsDiv.textContent = "В этой категории пока нет товаров.";
             return;
         }
 
         products.forEach(p => {
             const div = document.createElement("div");
-            div.style.border = "1px solid gray";
-            div.style.margin = "10px";
-            div.style.padding = "10px";
+            div.className = "product";
             div.innerHTML = `
-        <h4>${p.name}</h4>
-        <p>${p.description}</p>
-        <p>Цена: ${p.price} $</p>
-        <img src="${p.imageUrl}" alt="image" width="120">
-      `;
-            container.appendChild(div);
+          <strong>${p.name}</strong><br>
+          ${p.description || ""}<br>
+          💲 ${p.price}<br>
+          ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}">` : ""}
+        `;
+            productsDiv.appendChild(div);
         });
     }
 
-    function goBack() {
-        window.location.href = "/index.html";
+    async function showAdminControls() {
+        const role = await getUserRole();
+        if (role && role === "ADMIN") {
+            const controls = document.getElementById("adminControls");
+            const btn = document.createElement("button");
+            btn.className = "add-btn";
+            btn.textContent = "➕ Добавить товар";
+            btn.onclick = () => {
+                window.location.href = `/addProduct.html?categoryId=${categoryId}`;
+            };
+            controls.appendChild(btn);
+        }
     }
 
+    function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/login.html";
+    }
+
+    // Загрузка при открытии страницы
     loadProducts();
+    showAdminControls();
 </script>
+
 </body>
 </html>
