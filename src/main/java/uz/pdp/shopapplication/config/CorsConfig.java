@@ -18,6 +18,7 @@ public class CorsConfig {
                                         "http://localhost:3000") // адрес фронтенда
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
+                        .exposedHeaders("Authorization")
                         .allowCredentials(true);
             }
         };

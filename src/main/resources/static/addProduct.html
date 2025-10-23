@@ -27,7 +27,7 @@
 <a href="index.html" class="back">← Назад к категориям</a>
 <span class="logout" onclick="logout()">Выйти</span>
 
-<form id="productForm">
+<form id="productForm" enctype="multipart/form-data">
     <label>Название:</label>
     <input type="text" id="name" required>
 
@@ -37,8 +37,8 @@
     <label>Цена:</label>
     <input type="number" id="price" required step="0.01">
 
-    <label>URL изображения:</label>
-    <input type="text" id="imageUrl">
+    <label>Изображение:</label>
+    <input type="file" id="imageFile" accept="image/*">
 
     <button type="submit">Добавить товар</button>
 </form>
@@ -64,13 +64,32 @@
             return;
         }
 
-        const product = {
-            name: document.getElementById("name").value.trim(),
-            description: document.getElementById("description").value.trim(),
-            price: parseFloat(document.getElementById("price").value),
-            imageUrl: document.getElementById("imageUrl").value.trim(),
-            categoryId: parseInt(categoryId)
-        };
+        const name = document.getElementById("name").value.trim();
+        const description = document.getElementById("description").value.trim();
+        const price = parseFloat(document.getElementById("price").value);
+        const fileInput = document.getElementById("imageFile");
+
+        let imageUrl = null;
+
+        if (fileInput.files.length > 0) {
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            const uploadRes = await fetch("http://localhost:8080/api/products/upload", {
+                method: "POST",
+                headers: { "Authorization": "Bearer " + token },
+                body: formData
+            });
+
+            if (uploadRes.ok) {
+                imageUrl = await uploadRes.text();
+            } else {
+                alert("Ошибка при загрузке изображения");
+                return;
+            }
+        }
+
+        const product = { name, description, price, imageUrl, categoryId: parseInt(categoryId) };
 
         const response = await fetch("http://localhost:8080/api/products", {
             method: "POST",
@@ -83,15 +102,9 @@
 
         const messageDiv = document.getElementById("message");
 
-        if (response.status === 401) {
-            alert("Сессия истекла. Войдите снова.");
-            window.location.href = "/login.html";
-            return;
-        }
-
         if (response.status === 403) {
             messageDiv.style.color = "red";
-            messageDiv.textContent = "❌ У вас нет прав для добавления товара (требуется ADMIN).";
+            messageDiv.textContent = "❌ Нет прав для добавления товара (требуется ADMIN)";
             return;
         }
 

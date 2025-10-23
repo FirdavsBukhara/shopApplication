@@ -2,130 +2,198 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Товары категории</title>
+    <title>Товары</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         h2 { color: #333; }
-        .product {
+        .logout { float: right; color: red; cursor: pointer; }
+        .category-list { margin-bottom: 20px; }
+        .category-list button {
+            margin-right: 10px;
+            padding: 5px 10px;
             border: 1px solid #ccc;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .category-list button:hover { background-color: #ddd; }
+        .product {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px;
             border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
+            width: 250px;
+            display: inline-block;
+            vertical-align: top;
         }
         .product img {
-            max-width: 150px;
-            display: block;
-            margin-top: 10px;
+            max-width: 100%;
+            border-radius: 6px;
+            margin-top: 5px;
         }
-        .back { text-decoration: none; color: #007bff; }
-        .logout { float: right; color: red; cursor: pointer; }
         .add-btn {
-            background-color: #4CAF50; color: white;
-            border: none; padding: 10px 15px;
-            border-radius: 5px; cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 5px;
             margin-bottom: 15px;
         }
         .add-btn:hover { background-color: #45a049; }
+        button.edit-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 8px;
+        }
+        button.edit-btn:hover { background-color: #0069d9; }
     </style>
 </head>
 <body>
 
-<h2 id="categoryName">Товары</h2>
-<a href="index.html" class="back">← Назад к категориям</a>
+<h2>Список товаров</h2>
 <span class="logout" onclick="logout()">Выйти</span>
 
-<div id="adminControls" style="margin-top: 20px;"></div>
+<div class="category-list" id="categoryList"></div>
+<div id="adminControls" style="margin: 15px 0;"></div>
 <div id="products"></div>
 
 <script>
-    const token = localStorage.getItem("token");
+    // === Хелпер ===
+    function getToken() {
+        return localStorage.getItem("token");
+    }
+
+    async function authFetch(url, options = {}) {
+        const token = getToken();
+        const headers = {
+            ...(options.headers || {}),
+            "Authorization": `Bearer ${token}`,
+        };
+        if (!(options.body instanceof FormData)) {
+            headers["Content-Type"] = "application/json";
+        }
+
+        const response = await fetch(url, { ...options, headers });
+        if (response.status === 401) {
+            alert("Сессия истекла. Войдите снова.");
+            localStorage.removeItem("token");
+            window.location.href = "/login.html";
+            return null;
+        }
+        try {
+            return await response.json();
+        } catch {
+            return response;
+        }
+    }
+
+    // === Основная логика ===
+    const token = getToken();
     if (!token) {
         alert("Вы не авторизованы!");
         window.location.href = "/login.html";
     }
 
-    const params = new URLSearchParams(window.location.search);
-    const categoryId = params.get("categoryId");
-    const categoryName = params.get("categoryName");
-
-    if (!categoryId) {
-        alert("Не выбрана категория!");
-        window.location.href = "/index.html";
-    }
-
-    document.getElementById("categoryName").textContent =
-        "Категория: " + (categoryName || "Без названия");
-
     async function getUserRole() {
-        // 🔹 новый эндпоинт на бэке /auth/me должен возвращать текущего пользователя
-        const res = await fetch("http://localhost:8080/auth/me", {
-            headers: { "Authorization": "Bearer " + token }
-        });
-        if (!res.ok) return null;
-        const user = await res.json();
-        return user.role || null;
+        const user = await authFetch("http://localhost:8080/auth/me");
+        return user?.role || "USER";
     }
 
-    async function loadProducts() {
-        const response = await fetch(`http://localhost:8080/api/products/category/${categoryId}`, {
-            headers: { "Authorization": "Bearer " + token }
+    async function loadCategories() {
+        const categories = await authFetch("http://localhost:8080/api/categories");
+        const container = document.getElementById("categoryList");
+        container.innerHTML = "";
+
+        categories.forEach(cat => {
+            const btn = document.createElement("button");
+            btn.textContent = cat.name;
+            btn.onclick = () => loadProducts(cat.id);
+            container.appendChild(btn);
         });
+    }
 
-        if (response.status === 401) {
-            alert("Сессия истекла. Войдите снова.");
-            window.location.href = "/login.html";
-            return;
-        }
-
+    async function loadProducts(categoryId = null) {
+        const role = await getUserRole();
         const productsDiv = document.getElementById("products");
         productsDiv.innerHTML = "";
 
-        if (!response.ok) {
-            productsDiv.textContent = "Ошибка при загрузке товаров.";
+        let url = "http://localhost:8080/api/products";
+        if (categoryId) url = `http://localhost:8080/api/products/category/${categoryId}`;
+
+        const products = await authFetch(url);
+        if (!products || products.length === 0) {
+            productsDiv.innerHTML = "<p>Нет товаров в этой категории.</p>";
+            showAdminControls(categoryId, role);
             return;
         }
 
-        const products = await response.json();
-        if (products.length === 0) {
-            productsDiv.textContent = "В этой категории пока нет товаров.";
-            return;
-        }
+        showAdminControls(categoryId, role);
 
         products.forEach(p => {
             const div = document.createElement("div");
             div.className = "product";
             div.innerHTML = `
-          <strong>${p.name}</strong><br>
-          ${p.description || ""}<br>
-          💲 ${p.price}<br>
-          ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}">` : ""}
-        `;
+                <strong>${p.name}</strong><br>
+                ${p.description || ""}<br>
+                💲 ${p.price}<br>
+                ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}">` : ""}
+                ${role === "ADMIN" ? `
+                    <br><button class="edit-btn" onclick="editProduct(${p.id})">✏️ Изменить</button>
+                    <button class="delete-btn" onclick="deleteProduct(${p.id})">🗑 Удалить</button>
+                ` : ""}
+            `;
             productsDiv.appendChild(div);
         });
     }
 
-    async function showAdminControls() {
-        const role = await getUserRole();
-        if (role && role === "ADMIN") {
-            const controls = document.getElementById("adminControls");
+    async function showAdminControls(categoryId, role) {
+        const controls = document.getElementById("adminControls");
+        controls.innerHTML = "";
+        if (role === "ADMIN" && categoryId) {
             const btn = document.createElement("button");
             btn.className = "add-btn";
             btn.textContent = "➕ Добавить товар";
-            btn.onclick = () => {
-                window.location.href = `/addProduct.html?categoryId=${categoryId}`;
-            };
+            btn.onclick = () => addProduct(categoryId);
             controls.appendChild(btn);
         }
     }
 
+    function addProduct(categoryId) {
+        window.location.href = `/addProduct.html?categoryId=${categoryId}`;
+    }
+
+    function editProduct(id) {
+        window.location.href = `/editProduct.html?productId=${id}`;
+    }
+
     function logout() {
         localStorage.removeItem("token");
+        localStorage.removeItem("username");
         window.location.href = "/login.html";
     }
 
-    // Загрузка при открытии страницы
-    loadProducts();
-    showAdminControls();
+    // === Инициализация ===
+    loadCategories();
+    async function deleteProduct(id) {
+        if (!confirm("Вы уверены, что хотите удалить этот товар?")) return;
+
+        const response = await fetch(`http://localhost:8080/api/products/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": "Bearer " + token }
+        });
+
+        if (response.ok) {
+            alert("✅ Товар удалён!");
+            loadProducts(); // перезагружаем список
+        } else {
+            alert("❌ Ошибка при удалении товара");
+        }
+    }
 </script>
 
 </body>

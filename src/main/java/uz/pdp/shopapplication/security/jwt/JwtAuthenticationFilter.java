@@ -30,12 +30,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         System.out.println("🔹 JwtFilter START — URI: " + uri);
 
-        // ✅ Пропускаем только логин, регистрацию и статические ресурсы
+// ✅ Пропускаем логин, регистрацию, статические и multipart-запросы
         if (uri.startsWith("/auth/login") ||
                 uri.startsWith("/auth/register") ||
                 uri.startsWith("/css") ||
                 uri.startsWith("/js") ||
                 uri.startsWith("/images") ||
+                uri.startsWith("/uploads") ||                // ✅ папка с картинками
+//                uri.startsWith("/api/products/upload") ||    // ✅ multipart upload
                 uri.equals("/") ||
                 uri.endsWith(".html")) {
 
@@ -46,6 +48,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 🔸 Проверяем заголовок Authorization
         String header = request.getHeader("Authorization");
+        System.out.println("🔸 Проверяем заголовок Authorization...");
+        System.out.println("🔸 Header = " + header);
+
         if (header == null || !header.startsWith("Bearer ")) {
             System.out.println("🚫 Нет заголовка Authorization или формат неверный");
             filterChain.doFilter(request, response);

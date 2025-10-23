@@ -32,23 +32,21 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        System.out.println("🛡️ Инициализация SecurityConfig...");
-
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.disable())
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/", "/index.html", "/login.html", "/register.html",
-                                "/products.html", "/addProduct.html",   // ✅ добавили
-                                "/css/**", "/js/**", "/images/**",
-                                "/auth/**"
+                                "/auth/**",
+                                "/uploads/**",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/*.html"
                         ).permitAll()
-                        .requestMatchers("/auth/me").authenticated()
+                        .requestMatchers("/api/products/upload").hasRole("ADMIN") // только админ
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))

@@ -82,7 +82,7 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findByCategoryId(categoryId)
                 .stream()
                 .map(this::mapToDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private ProductDto mapToDto(Product product) {
