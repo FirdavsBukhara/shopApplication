@@ -12,6 +12,14 @@
 <hr>
 
 <h3>Категории</h3>
+
+<!-- ✅ Форма для добавления новой категории -->
+<div>
+    <input type="text" id="newCategoryName" placeholder="Название категории">
+    <button onclick="addCategory()">Добавить</button>
+</div>
+
+<br>
 <div id="categoryList"></div>
 
 <script>
@@ -52,6 +60,31 @@
             };
             container.appendChild(btn);
         });
+    }
+
+    // ✅ Функция для добавления новой категории
+    async function addCategory() {
+        const name = document.getElementById("newCategoryName").value.trim();
+        if (!name) {
+            alert("Введите название категории");
+            return;
+        }
+
+        const response = await fetch("http://localhost:8080/api/categories", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({ name })
+        });
+
+        if (response.ok) {
+            document.getElementById("newCategoryName").value = "";
+            loadCategories(); // обновляем список
+        } else {
+            alert("Ошибка при добавлении категории: " + response.status);
+        }
     }
 
     function logout() {
