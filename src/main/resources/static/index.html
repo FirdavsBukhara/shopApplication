@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Главная</title>
+</head>
+<body>
+<h2>Добро пожаловать!</h2>
+<p id="welcome"></p>
+<button onclick="logout()">Выйти</button>
+
+<hr>
+
+<h3>Категории</h3>
+<div id="categoryList"></div>
+
+<script>
+    const token = localStorage.getItem("token");
+    const username = localStorage.getItem("username");
+
+    if (!token) {
+        window.location.href = "/login.html";
+    }
+
+    document.getElementById("welcome").textContent = "Вы вошли как: " + username;
+
+    async function loadCategories() {
+        const response = await fetch("http://localhost:8080/api/categories", {
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+
+        if (!response.ok) {
+            alert("Ошибка: " + response.status);
+            if (response.status === 401) {
+                window.location.href = "/login.html";
+            }
+            return;
+        }
+
+        const categories = await response.json();
+        const container = document.getElementById("categoryList");
+        container.innerHTML = "";
+
+        categories.forEach(cat => {
+            const btn = document.createElement("button");
+            btn.textContent = cat.name;
+            btn.style.margin = "5px";
+            btn.onclick = () => {
+                window.location.href = `/products.html?categoryId=${cat.id}`;
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        window.location.href = "/login.html";
+    }
+
+    loadCategories();
+</script>
+</body>
+</html>

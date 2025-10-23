@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавить товар</title>
+</head>
+<body>
+<h2>Добавить товар</h2>
+<form id="addProductForm">
+    <label>Название:</label><br>
+    <input type="text" id="name" required><br><br>
+
+    <label>Описание:</label><br>
+    <textarea id="description"></textarea><br><br>
+
+    <label>Цена:</label><br>
+    <input type="number" id="price" required><br><br>
+
+    <label>URL изображения:</label><br>
+    <input type="text" id="imageUrl"><br><br>
+
+    <label>Категория:</label><br>
+    <select id="category"></select><br><br>
+
+    <button type="submit">Добавить</button>
+</form>
+
+<script>
+    const token = localStorage.getItem("token");
+    if (!token) {
+        window.location.href = "/login.html";
+    }
+
+    async function loadCategories() {
+        const response = await fetch("http://localhost:8080/api/categories", {
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+
+        const categories = await response.json();
+        const select = document.getElementById("category");
+        categories.forEach(cat => {
+            const opt = document.createElement("option");
+            opt.value = cat.id;
+            opt.textContent = cat.name;
+            select.appendChild(opt);
+        });
+    }
+
+    document.getElementById("addProductForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const dto = {
+            name: document.getElementById("name").value,
+            description: document.getElementById("description").value,
+            price: parseFloat(document.getElementById("price").value),
+            imageUrl: document.getElementById("imageUrl").value,
+            categoryId: parseInt(document.getElementById("category").value)
+        };
+
+        const response = await fetch("http://localhost:8080/api/products", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify(dto)
+        });
+
+        if (response.ok) {
+            alert("Товар успешно добавлен!");
+            window.location.href = "/index.html";
+        } else {
+            alert("Ошибка при добавлении товара");
+        }
+    });
+
+    loadCategories();
+</script>
+</body>
+</html>

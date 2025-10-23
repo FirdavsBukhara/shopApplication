@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход</title>
+</head>
+<body>
+<h2>Авторизация</h2>
+
+<form id="loginForm">
+    <label>Логин:</label><br>
+    <input type="text" id="username" required><br><br>
+
+    <label>Пароль:</label><br>
+    <input type="password" id="password" required><br><br>
+
+    <button type="submit">Войти</button>
+</form>
+
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        const response = await fetch("http://localhost:8080/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("username", data.username);
+            alert("Успешный вход!");
+            window.location.href = "/index.html";
+        } else {
+            alert("Неверный логин или пароль!");
+        }
+    });
+</script>
+</body>
+</html>
