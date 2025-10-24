@@ -28,42 +28,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String uri = request.getRequestURI();
-        System.out.println("🔹 JwtFilter START — URI: " + uri);
+        System.out.println("JwtFilter START — URI: " + uri);
 
-// ✅ Пропускаем логин, регистрацию, статические и multipart-запросы
         if (uri.startsWith("/auth/login") ||
                 uri.startsWith("/auth/register") ||
                 uri.startsWith("/css") ||
                 uri.startsWith("/js") ||
                 uri.startsWith("/images") ||
-                uri.startsWith("/uploads") ||                // ✅ папка с картинками
-//                uri.startsWith("/api/products/upload") ||    // ✅ multipart upload
+                uri.startsWith("/uploads") ||
                 uri.equals("/") ||
                 uri.endsWith(".html")) {
 
-            System.out.println("🟢 Пропускаем без токена: " + uri);
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 🔸 Проверяем заголовок Authorization
         String header = request.getHeader("Authorization");
-        System.out.println("🔸 Проверяем заголовок Authorization...");
-        System.out.println("🔸 Header = " + header);
+        System.out.println("Header = " + header);
 
         if (header == null || !header.startsWith("Bearer ")) {
-            System.out.println("🚫 Нет заголовка Authorization или формат неверный");
+            System.out.println("Нет заголовка Authorization или формат неверный");
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = header.substring(7);
-        System.out.println("✅ Получен токен: " + token);
+        System.out.println("Получен токен: " + token);
 
         try {
             if (jwtTokenProvider.validateToken(token)) {
                 String username = jwtTokenProvider.getUsernameFromToken(token);
-                System.out.println("👤 Из токена извлечён пользователь: " + username);
+                System.out.println("Из токена извлечён пользователь: " + username);
 
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -84,6 +79,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-        System.out.println("🔹 JwtFilter END — URI: " + uri);
+        System.out.println("JwtFilter END — URI: " + uri);
     }
 }

@@ -73,7 +73,7 @@ public class ProductController {
             Path path = Paths.get(uploadDir + fileName);
             Files.write(path, file.getBytes());
 
-            // URL для доступа к файлу (через Spring Boot static)
+
             String fileUrl = "http://localhost:8080/uploads/" + fileName;
             return ResponseEntity.ok(fileUrl);
 

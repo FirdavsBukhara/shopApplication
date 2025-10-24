@@ -51,8 +51,6 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-        System.out.println("✅ JwtAuthenticationFilter добавлен в цепочку безопасности");
         return http.build();
     }
 }
