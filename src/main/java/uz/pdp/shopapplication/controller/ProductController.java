@@ -1,10 +1,14 @@
 package uz.pdp.shopapplication.controller;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import uz.pdp.shopapplication.dto.ProductDto;
+import uz.pdp.shopapplication.service.PdfService;
 import uz.pdp.shopapplication.service.ProductService;
 
 import java.io.File;
@@ -16,14 +20,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
-
+@RequiredArgsConstructor
 public class ProductController {
 
     private final ProductService productService;
-
-    public ProductController(ProductService productService) {
-        this.productService = productService;
-    }
+    private final PdfService pdfService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
@@ -83,4 +84,14 @@ public class ProductController {
         }
     }
 
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> downloadProductPdf(@PathVariable Long id) {
+        ProductDto product = productService.getProductById(id);
+        byte[] pdfbytes = pdfService.generateProductPdf(product);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=product_" + id + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfbytes);
+    }
 }

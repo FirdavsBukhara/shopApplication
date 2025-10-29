@@ -44,9 +44,10 @@ public class SecurityConfig {
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
-                                "/*.html"
+                                "/*.html",
+                                "/"
                         ).permitAll()
-                        .requestMatchers("/api/products/upload").hasRole("ADMIN") // только админ
+                        .requestMatchers("/api/products/upload").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))

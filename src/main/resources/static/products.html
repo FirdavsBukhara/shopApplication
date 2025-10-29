@@ -145,6 +145,7 @@
                 ${role === "ADMIN" ? `
                     <br><button class="edit-btn" onclick="editProduct(${p.id})">✏️ Изменить</button>
                     <button class="delete-btn" onclick="deleteProduct(${p.id})">🗑 Удалить</button>
+                    <button class="pdf-btn" onclick="downloadPdf(${p.id})">📄 Скачать PDF</button>
                 ` : ""}
             `;
             productsDiv.appendChild(div);
@@ -161,6 +162,25 @@
             btn.onclick = () => addProduct(categoryId);
             controls.appendChild(btn);
         }
+    }
+    function downloadPdf(id) {
+        const token = localStorage.getItem("token");
+        fetch(`http://localhost:8080/api/products/${id}/pdf`, {
+            method: "GET",
+            headers: { "Authorization": "Bearer " + token }
+        })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `product_${id}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(() => alert("Ошибка при скачивании PDF"));
     }
 
     function addProduct(categoryId) {
