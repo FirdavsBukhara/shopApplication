@@ -24,19 +24,17 @@ public class PdfServiceImpl implements PdfService {
             PdfWriter.getInstance(document, out);
             document.open();
 
-            // === Заголовок ===
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22);
             document.add(new Paragraph(product.getName(), titleFont));
             document.add(new Paragraph(" "));
 
-            // === Добавляем изображение (универсально для любых форматов) ===
+
             if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) {
                 try {
                     String encodedUrl = product.getImageUrl().replace(" ", "%20");
                     BufferedImage bufferedImage = ImageIO.read(new URL(encodedUrl));
                     if (bufferedImage != null) {
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        // Конвертируем в PNG (поддерживается 100%)
                         ImageIO.write(bufferedImage, "png", baos);
                         Image image = Image.getInstance(baos.toByteArray());
                         image.scaleToFit(300, 300);
@@ -52,7 +50,7 @@ public class PdfServiceImpl implements PdfService {
 
             document.add(new Paragraph(" "));
 
-            // === Детали товара ===
+
             Font textFont = FontFactory.getFont(FontFactory.HELVETICA, 14);
             document.add(new Paragraph("Описание: " + product.getDescription(), textFont));
             document.add(new Paragraph("Цена: " + product.getPrice() + " $", textFont));
