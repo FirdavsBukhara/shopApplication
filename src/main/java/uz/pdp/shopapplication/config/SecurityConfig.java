@@ -32,6 +32,7 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -47,7 +48,7 @@ public class SecurityConfig {
                                 "/*.html",
                                 "/"
                         ).permitAll()
-                        .requestMatchers("/api/products/upload").hasRole("ADMIN")
+                        .requestMatchers("/api/products/upload", "/api/users/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Пользователи</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        .logout {
+            float: right;
+            color: red;
+            cursor: pointer;
+        }
+
+        .user-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px;
+            width: 260px;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .download-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .download-btn:hover {
+            background-color: #0069d9;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Список пользователей</h2>
+<span class="logout" onclick="logout()">Выйти</span>
+
+<div class="container" id="userList"></div>
+
+<script>
+    function getToken() {
+        return localStorage.getItem("token");
+    }
+
+    async function authFetch(url, options = {}) {
+        const token = getToken();
+        const headers = {
+            ...(options.headers || {}),
+            "Authorization": `Bearer ${token}`,
+        };
+        if (!(options.body instanceof FormData)) {
+            headers["Content-Type"] = "application/json";
+        }
+
+        const response = await fetch(url, {...options, headers});
+        if (response.status === 401) {
+            alert("Сессия истекла. Войдите снова.");
+            localStorage.removeItem("token");
+            window.location.href = "/login.html";
+            return null;
+        }
+        try {
+            return await response.json();
+        } catch {
+            return response;
+        }
+    }
+
+    // === Основная логика ===
+    const token = getToken();
+    if (!token) {
+        alert("Вы не авторизованы!");
+        window.location.href = "/login.html";
+    }
+
+    async function loadUsers() {
+        const users = await authFetch("http://localhost:8080/api/users");
+        const container = document.getElementById("userList");
+        container.innerHTML = "";
+
+        if (!users || users.length === 0) {
+            container.innerHTML = "<p>Нет пользователей.</p>";
+            return;
+        }
+
+        users.forEach(u => {
+            const div = document.createElement("div");
+            div.className = "user-card";
+            div.innerHTML = `
+                <strong>👤 ${u.fullName || u.username}</strong><br>
+                Паспорт: ${u.passportNumber || "-"}<br>
+                Баланс: ${u.balance || 0} USD<br>
+                <button class="download-btn" onclick="downloadUserDocx(${u.id})">📄 Скачать DOCX</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/login.html";
+    }
+
+    async function downloadUserDocx(id) {
+        const token = getToken();
+        const response = await fetch(`http://localhost:8080/api/users/${id}/docx`, {
+            headers: {"Authorization": `Bearer ${token}`}
+        });
+
+        if (!response.ok) {
+            alert("Ошибка при скачивании DOCX");
+            return;
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `user_${id}.docx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    loadUsers();
+</script>
+
+</body>
+</html>

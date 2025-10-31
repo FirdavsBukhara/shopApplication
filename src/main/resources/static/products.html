@@ -155,6 +155,16 @@
     async function showAdminControls(categoryId, role) {
         const controls = document.getElementById("adminControls");
         controls.innerHTML = "";
+
+        if (role === "ADMIN") {
+            // Кнопка "Пользователи"
+            const usersBtn = document.createElement("button");
+            usersBtn.className = "add-btn";
+            usersBtn.textContent = "👥 Пользователи";
+            usersBtn.onclick = () => window.location.href = "/users.html";
+            controls.appendChild(usersBtn);
+        }
+
         if (role === "ADMIN" && categoryId) {
             const btn = document.createElement("button");
             btn.className = "add-btn";
