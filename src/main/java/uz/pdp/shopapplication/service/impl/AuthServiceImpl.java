@@ -33,13 +33,27 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username already taken");
         }
-        Role userRole = roleRepository.findByName(Role.RoleName.ROLE_USER)
-                .orElseThrow(() -> new RuntimeException("Role Not Found"));
+        /*Role userRole = roleRepository.findByName(Role.RoleName.ROLE_USER)
+                .orElseThrow(() -> new RuntimeException("Role Not Found"));*/
+
+        boolean firstUser = userRepository.count() == 0;
+
+        Role.RoleName roleName = firstUser
+                ? Role.RoleName.ROLE_ADMIN
+                : Role.RoleName.ROLE_USER;
+
+        Role role = roleRepository.findByName(roleName)
+                .orElseGet(() -> roleRepository.save(
+                        Role.builder().name(roleName).build()));
+
 
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .roles(Set.of(userRole))
+                .fullName(request.getFullName())
+                .passportNumber(request.getPassportNumber())
+                .balance(request.getBalance())
+                .roles(Set.of(role))
                 .build();
 
         userRepository.save(user);
@@ -51,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public JwtResponse login(LoginRequest request) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword()));
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         String token = jwtTokenProvider.generateToken(request.getUsername());
         return new JwtResponse(token, request.getUsername());
     }

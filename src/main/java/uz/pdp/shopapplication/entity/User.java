@@ -26,6 +26,15 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private String fullName;
+
+    @Column(nullable = false)
+    private String passportNumber;
+
+    @Column(nullable = false)
+    private Double balance;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

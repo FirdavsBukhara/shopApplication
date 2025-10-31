@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h2 { color: #333; }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 320px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover { background-color: #45a049; }
+        .link {
+            display: block;
+            margin-top: 10px;
+            text-align: center;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Регистрация</h2>
+
+    <input type="text" id="username" placeholder="Имя пользователя (логин)" required>
+    <input type="password" id="password" placeholder="Пароль" required>
+    <input type="text" id="fullName" placeholder="Полное имя" required>
+    <input type="text" id="passportNumber" placeholder="Паспорт AA1234567" required>
+    <input type="number" id="balance" placeholder="Баланс (USD)" step="0.01" required>
+
+    <button onclick="register()">Зарегистрироваться</button>
+    <a href="/login.html" class="link">← Назад к входу</a>
+</div>
+
+<script>
+    async function register() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const fullName = document.getElementById("fullName").value.trim();
+        const passportNumber = document.getElementById("passportNumber").value.trim();
+        const balance = parseFloat(document.getElementById("balance").value.trim());
+
+        if (!username || !password || !fullName || !passportNumber || isNaN(balance)) {
+            alert("Пожалуйста, заполните все поля корректно");
+            return;
+        }
+
+        const response = await fetch("http://localhost:8080/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password, fullName, passportNumber, balance })
+        });
+
+        if (response.ok) {
+            alert("✅ Регистрация успешна! Теперь войдите.");
+            window.location.href = "/login.html";
+        } else {
+            const errorText = await response.text();
+            alert("❌ Ошибка регистрации: " + errorText);
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -6,14 +6,16 @@ import uz.pdp.shopapplication.entity.User;
 public class UserMapper {
 
     public static UserDto toDto(User user) {
-        if(user == null) { return null; }
+        if (user == null) {
+            return null;
+        }
 
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
-                .fullName(user.getUsername())
-                .passportNumber("AB1234567")
-                .balance(2200.50)
+                .fullName(user.getFullName())
+                .passportNumber(user.getPassportNumber())
+                .balance(user.getBalance())
                 .build();
     }
 }

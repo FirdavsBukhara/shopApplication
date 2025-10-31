@@ -52,11 +52,15 @@
 <body>
 
 <h2>Список пользователей</h2>
+<button class="add-btn" onclick="goBackToProducts()">← Назад к товарам</button>
 <span class="logout" onclick="logout()">Выйти</span>
 
 <div class="container" id="userList"></div>
 
 <script>
+    function goBackToProducts() {
+        window.location.href = "/products.html";
+    }
     function getToken() {
         return localStorage.getItem("token");
     }
