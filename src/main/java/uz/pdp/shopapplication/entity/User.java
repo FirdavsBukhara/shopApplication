@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.Set;
 
 @Entity
@@ -31,6 +33,12 @@ public class User {
 
     @Column(nullable = false)
     private String passportNumber;
+
+    @Column(nullable = false)
+    private LocalDate issuedAt;
+
+    @Column(nullable = false)
+    private String bankAccount;
 
     @Column(nullable = false)
     private Double balance;

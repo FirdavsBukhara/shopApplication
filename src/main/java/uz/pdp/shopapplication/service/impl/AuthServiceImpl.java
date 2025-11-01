@@ -15,6 +15,7 @@ import uz.pdp.shopapplication.repository.UserRepository;
 import uz.pdp.shopapplication.security.jwt.JwtTokenProvider;
 import uz.pdp.shopapplication.service.AuthService;
 
+import java.util.Date;
 import java.util.Set;
 
 @Service
@@ -52,6 +53,8 @@ public class AuthServiceImpl implements AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .passportNumber(request.getPassportNumber())
+                .issuedAt(request.getIssuedAt())
+                .bankAccount(request.getBankAccount())
                 .balance(request.getBalance())
                 .roles(Set.of(role))
                 .build();

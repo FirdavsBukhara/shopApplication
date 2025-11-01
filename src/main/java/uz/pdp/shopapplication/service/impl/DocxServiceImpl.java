@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class DocxServiceImpl implements DocxService {
@@ -38,21 +39,33 @@ public class DocxServiceImpl implements DocxService {
     }
 
     private void replacePlaceholdersInRuns(List<XWPFRun> runs, UserDto user) {
+
         if (runs == null) return;
 
         DateTimeFormatter df = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         String date = LocalDate.now().format(df);
 
+        String issuedAtStr = user.getIssuedAt() != null
+                ? user.getIssuedAt().format(df)
+                : "";
+        System.out.println("DEBUG user: issuedAt=" + user.getIssuedAt() + ", bankAccount=" + user.getBankAccount());
+
         for (XWPFRun run : runs) {
             String text = run.getText(0);
             if (text == null) continue;
 
-            text = text.replace("{FULL_NAME}", user.getFullName());
-            text = text.replace("{PASSPORT}", user.getPassportNumber());
-            text = text.replace("{BALANCE}", String.format("%.2f", user.getBalance()));
-            text = text.replace("{DATE}", LocalDate.now().toString());
+            text = text.replace("{FULL_NAME}", safe(user.getFullName()));
+            text = text.replace("{PASSPORT}", safe(user.getPassportNumber()));
+            text = text.replace("{ISSUED_AT}",safe(issuedAtStr));
+            text = text.replace("{BANK_ACCOUNT}", safe(user.getBankAccount()));
+            text = text.replace("{BALANCE}", user.getBalance() != null ? String.format("%.2f", user.getBalance()) : "0.00");
+            text = text.replace("{DATE}", safe(date));
 
             run.setText(text, 0);
         }
+
+    }
+    private String safe(String value) {
+        return value != null ? value : "";
     }
 }

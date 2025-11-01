@@ -59,9 +59,13 @@
     <input type="password" id="password" placeholder="Пароль" required>
     <input type="text" id="fullName" placeholder="Полное имя" required>
     <input type="text" id="passportNumber" placeholder="Паспорт AA1234567" required>
+    <label>Дата выдачи паспорта:</label>
+    <input type="date" id="issuedAt" placeholder="Дата выдачи" required>
+    <input type="text" id="bankAccount" placeholder="Расчётный счёт" required>
     <input type="number" id="balance" placeholder="Баланс (USD)" step="0.01" required>
 
     <button onclick="register()">Зарегистрироваться</button>
+
     <a href="/login.html" class="link">← Назад к входу</a>
 </div>
 
@@ -71,17 +75,21 @@
         const password = document.getElementById("password").value.trim();
         const fullName = document.getElementById("fullName").value.trim();
         const passportNumber = document.getElementById("passportNumber").value.trim();
+        const issuedAt = document.getElementById("issuedAt").value;
+        const bankAccount = document.getElementById("bankAccount").value.trim();
         const balance = parseFloat(document.getElementById("balance").value.trim());
 
-        if (!username || !password || !fullName || !passportNumber || isNaN(balance)) {
-            alert("Пожалуйста, заполните все поля корректно");
+        if (!username || !password || !fullName || !passportNumber || !issuedAt || !bankAccount || isNaN(balance)) {
+            alert("⚠️ Пожалуйста, заполните все поля корректно");
             return;
         }
+
+        const data = { username, password, fullName, passportNumber, issuedAt, bankAccount, balance };
 
         const response = await fetch("http://localhost:8080/auth/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password, fullName, passportNumber, balance })
+            body: JSON.stringify(data)
         });
 
         if (response.ok) {

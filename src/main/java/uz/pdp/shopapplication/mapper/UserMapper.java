@@ -15,6 +15,8 @@ public class UserMapper {
                 .username(user.getUsername())
                 .fullName(user.getFullName())
                 .passportNumber(user.getPassportNumber())
+                .issuedAt(user.getIssuedAt())
+                .bankAccount(user.getBankAccount())
                 .balance(user.getBalance())
                 .build();
     }
