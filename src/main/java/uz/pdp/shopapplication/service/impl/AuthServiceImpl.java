@@ -15,7 +15,6 @@ import uz.pdp.shopapplication.repository.UserRepository;
 import uz.pdp.shopapplication.security.jwt.JwtTokenProvider;
 import uz.pdp.shopapplication.service.AuthService;
 
-import java.util.Date;
 import java.util.Set;
 
 @Service

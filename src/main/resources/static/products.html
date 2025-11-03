@@ -63,7 +63,6 @@
 <div id="products"></div>
 
 <script>
-    // === Хелпер ===
     function getToken() {
         return localStorage.getItem("token");
     }
@@ -92,7 +91,6 @@
         }
     }
 
-    // === Основная логика ===
     const token = getToken();
     if (!token) {
         alert("Вы не авторизованы!");
@@ -207,7 +205,6 @@
         window.location.href = "/login.html";
     }
 
-    // === Инициализация ===
     loadCategories();
     async function deleteProduct(id) {
         if (!confirm("Вы уверены, что хотите удалить этот товар?")) return;
@@ -219,7 +216,7 @@
 
         if (response.ok) {
             alert("✅ Товар удалён!");
-            loadProducts(); // перезагружаем список
+            loadProducts();
         } else {
             alert("❌ Ошибка при удалении товара");
         }
