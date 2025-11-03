@@ -4,6 +4,6 @@ import uz.pdp.shopapplication.dto.UserDto;
 
 public interface DocxService {
 
-    byte[] generateUserCertificate(UserDto user);
+    byte[] generateUserCertificatePdf(UserDto user);
 
 }

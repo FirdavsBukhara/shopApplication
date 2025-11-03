@@ -5,7 +5,8 @@ import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import fr.opensagres.poi.xwpf.converter.pdf.PdfConverter;
+import fr.opensagres.poi.xwpf.converter.pdf.PdfOptions;
 import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
@@ -28,7 +29,7 @@ import java.util.List;
 @Service
 public class DocxServiceImpl implements DocxService {
 
-    @Override
+
     public byte[] generateUserCertificate(UserDto user) {
 
         try {
@@ -40,9 +41,11 @@ public class DocxServiceImpl implements DocxService {
                 replacePlaceholdersInRuns(paragraph.getRuns(), user);
             }
 
-            insertQrCode(document, "QR", "https://www.youtube.com/shorts/iyOnmlNtENo");
+            insertQrCode(document, "QR", "https://www.youtube.com/shorts/SnhHFzaSrnE");
+
             document.write(out);
             return out.toByteArray();
+
         } catch (IOException e) {
             throw new RuntimeException("Ошибка при генерации DOCX: " + e.getMessage(), e);
         }
@@ -98,12 +101,32 @@ public class DocxServiceImpl implements DocxService {
                         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
 
                         run.addPicture(bais, XWPFDocument.PICTURE_TYPE_PNG, "qr.png", Units.toEMU(100), Units.toEMU(100));
-                    } catch (IOException  | WriterException | org.apache.poi.openxml4j.exceptions.InvalidFormatException e) {
+                    } catch (IOException | WriterException |
+                             org.apache.poi.openxml4j.exceptions.InvalidFormatException e) {
                         throw new RuntimeException("Ошибка вставки QR-кода: " + e.getMessage(), e);
                     }
                     return;
                 }
             }
         }
+    }
+
+    public byte[] convertDocxToPdf(byte[] docxBytes) {
+        try (ByteArrayInputStream in = new ByteArrayInputStream(docxBytes);
+             XWPFDocument document = new XWPFDocument(in);
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            PdfOptions options = PdfOptions.create();
+            PdfConverter.getInstance().convert(document, out, options);
+
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка при конвертации DOCX в PDF: " + e.getMessage(), e);
+        }
+    }
+
+    public byte[] generateUserCertificatePdf(UserDto user) {
+        byte[] docxBytes = generateUserCertificate(user);
+        return convertDocxToPdf(docxBytes);
     }
 }

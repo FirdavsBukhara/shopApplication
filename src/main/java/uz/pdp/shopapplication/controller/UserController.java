@@ -32,16 +32,16 @@ public class UserController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/{id}/docx")
-    public ResponseEntity<byte[]> downloadUserDocx(@PathVariable Long id) {
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> downloadUserPdf(@PathVariable Long id) {
         User user = userService.getUserById(id);
         UserDto dto = UserMapper.toDto(user);
 
-        byte[] docx = docxService.generateUserCertificate(dto);
-
+//        byte[] docx = docxService.generateUserCertificate(dto);
+        byte[] pdf = docxService.generateUserCertificatePdf(dto);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=user_" + id + ".docx")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(docx);
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=user_" + id + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 }

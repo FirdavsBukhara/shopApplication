@@ -126,12 +126,12 @@
 
     async function downloadUserDocx(id) {
         const token = getToken();
-        const response = await fetch(`http://localhost:8080/api/users/${id}/docx`, {
+        const response = await fetch(`http://localhost:8080/api/users/${id}/pdf`, {
             headers: {"Authorization": `Bearer ${token}`}
         });
 
         if (!response.ok) {
-            alert("Ошибка при скачивании DOCX");
+            alert("Ошибка при скачивании PDF");
             return;
         }
 
@@ -139,7 +139,7 @@
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `user_${id}.docx`;
+        a.download = `user_${id}.pdf`;
         a.click();
         window.URL.revokeObjectURL(url);
     }
