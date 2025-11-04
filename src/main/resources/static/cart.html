@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Моя корзина</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #fafafa;
+        }
+        h2 { color: #333; }
+        .logout { float: right; color: red; cursor: pointer; }
+        .cart-item {
+            border: 1px solid #ddd;
+            background: white;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 8px;
+            width: 300px;
+            display: inline-block;
+            vertical-align: top;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .cart-item img {
+            max-width: 100%;
+            border-radius: 6px;
+        }
+        .cart-controls {
+            margin-top: 10px;
+        }
+        button {
+            border: none;
+            border-radius: 5px;
+            padding: 6px 10px;
+            cursor: pointer;
+            margin: 5px 3px;
+        }
+        button.remove-btn { background-color: #ff4444; color: white; }
+        button.remove-btn:hover { background-color: #dd0000; }
+        button.clear-btn { background-color: #888; color: white; }
+        button.clear-btn:hover { background-color: #666; }
+        button.order-btn { background-color: #4CAF50; color: white; }
+        button.order-btn:hover { background-color: #45a049; }
+        button.back-btn { background-color: #007bff; color: white; }
+        button.back-btn:hover { background-color: #0069d9; }
+        .price { font-weight: bold; color: #2e8b57; }
+    </style>
+</head>
+<body>
+
+<h2>🛒 Моя корзина</h2>
+<span class="logout" onclick="logout()">Выйти</span>
+
+<div id="cartItems"></div>
+
+<div style="margin-top: 20px;">
+    <button class="clear-btn" onclick="clearCart()">🧹 Очистить корзину</button>
+    <button class="order-btn" onclick="makeOrder()">💰 Оформить заказ</button>
+    <button class="back-btn" onclick="goBack()">← Назад к товарам</button>
+</div>
+
+<script>
+    const API_URL = "http://localhost:8080/api/cart";
+
+    function getToken() {
+        return localStorage.getItem("token");
+    }
+
+    async function authFetch(url, options = {}) {
+        const token = getToken();
+        const headers = {
+            ...(options.headers || {}),
+            "Authorization": `Bearer ${token}`,
+        };
+        if (!(options.body instanceof FormData)) {
+            headers["Content-Type"] = "application/json";
+        }
+        const response = await fetch(url, { ...options, headers });
+        if (response.status === 401) {
+            alert("Сессия истекла. Войдите снова.");
+            localStorage.removeItem("token");
+            window.location.href = "/login.html";
+            return null;
+        }
+        return await response.json();
+    }
+
+    async function loadCart() {
+        const cartDiv = document.getElementById("cartItems");
+        const data = await authFetch(API_URL);
+        if (!data || !data.items || data.items.length === 0) {
+            cartDiv.innerHTML = "<p>Ваша корзина пуста.</p>";
+            return;
+        }
+
+        cartDiv.innerHTML = "";
+        let total = 0;
+
+        data.items.forEach(item => {
+            const price = parseFloat(item.price).toFixed(2);
+            const sum = (item.quantity * price).toFixed(2);
+            total += parseFloat(sum);
+
+            const div = document.createElement("div");
+            div.className = "cart-item";
+            div.innerHTML = `
+                <strong>${item.productName}</strong><br>
+                Цена: <span class="price">${price} USD</span><br>
+                Количество: ${item.quantity}<br>
+                Сумма: <span class="price">${sum} USD</span><br>
+                <div class="cart-controls">
+                    <button class="remove-btn" onclick="removeItem(${item.id})">Удалить</button>
+                </div>
+            `;
+            cartDiv.appendChild(div);
+        });
+
+        const totalDiv = document.createElement("div");
+        totalDiv.innerHTML = `<h3>Итого: ${total.toLocaleString("ru-RU", { minimumFractionDigits: 2 })} USD</h3>`;
+        cartDiv.appendChild(totalDiv);
+    }
+
+    async function removeItem(productId) {
+        if (!confirm("Удалить этот товар из корзины?")) return;
+        await fetch(`${API_URL}/remove/${productId}`, {
+            method: "DELETE",
+            headers: { "Authorization": "Bearer " + getToken() }
+        });
+        loadCart();
+    }
+
+    async function clearCart() {
+        if (!confirm("Очистить корзину?")) return;
+        await fetch(`${API_URL}/clear`, {
+            method: "DELETE",
+            headers: { "Authorization": "Bearer " + getToken() }
+        });
+        loadCart();
+    }
+
+    function makeOrder() {
+        alert("🧾 Заказ оформлен! (функционал добавим позже)");
+    }
+
+    function goBack() {
+        window.location.href = "/products.html";
+    }
+
+    function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/login.html";
+    }
+    loadCart();
+</script>
+</body>
+</html>

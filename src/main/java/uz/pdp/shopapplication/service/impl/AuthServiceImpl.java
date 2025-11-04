@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import uz.pdp.shopapplication.dto.JwtResponse;
 import uz.pdp.shopapplication.dto.LoginRequest;
 import uz.pdp.shopapplication.dto.RegisterRequest;
+import uz.pdp.shopapplication.entity.Cart;
 import uz.pdp.shopapplication.entity.Role;
 import uz.pdp.shopapplication.entity.User;
 import uz.pdp.shopapplication.repository.RoleRepository;
@@ -57,6 +58,13 @@ public class AuthServiceImpl implements AuthService {
                 .balance(request.getBalance())
                 .roles(Set.of(role))
                 .build();
+
+        //adding cart:
+        Cart cart = Cart.builder()
+                .user(user)
+                .build();
+        user.setCart(cart);
+
 
         userRepository.save(user);
         String token = jwtTokenProvider.generateToken(user.getUsername());
