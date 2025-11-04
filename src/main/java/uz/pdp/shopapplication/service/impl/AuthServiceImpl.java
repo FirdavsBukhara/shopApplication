@@ -16,6 +16,7 @@ import uz.pdp.shopapplication.repository.UserRepository;
 import uz.pdp.shopapplication.security.jwt.JwtTokenProvider;
 import uz.pdp.shopapplication.service.AuthService;
 
+import java.math.BigDecimal;
 import java.util.Set;
 
 @Service
@@ -55,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
                 .passportNumber(request.getPassportNumber())
                 .issuedAt(request.getIssuedAt())
                 .bankAccount(request.getBankAccount())
-                .balance(request.getBalance())
+                .balance(BigDecimal.valueOf(request.getBalance()))
                 .roles(Set.of(role))
                 .build();
 

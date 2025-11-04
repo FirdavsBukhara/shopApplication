@@ -113,7 +113,7 @@
                 <strong>👤 ${u.fullName || u.username}</strong><br>
                 Паспорт: ${u.passportNumber || "-"}<br>
                 Баланс: ${u.balance || 0} USD<br>
-                <button class="download-btn" onclick="downloadUserDocx(${u.id})">📄 Скачать DOCX</button>
+                <button class="download-btn" onclick="downloadUserDocx(${u.id})">📄 Скачать PDF</button>
             `;
             container.appendChild(div);
         });

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -40,7 +41,7 @@ public class User {
     private String bankAccount;
 
     @Column(nullable = false)
-    private Double balance;
+    private BigDecimal balance;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

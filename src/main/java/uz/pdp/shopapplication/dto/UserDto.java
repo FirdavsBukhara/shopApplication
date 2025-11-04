@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -19,6 +20,6 @@ public class UserDto {
     private String passportNumber;
     private LocalDate issuedAt;
     private String bankAccount;
-    private Double balance;
+    private BigDecimal balance;
 
 }

@@ -139,8 +139,21 @@
         loadCart();
     }
 
-    function makeOrder() {
-        alert("🧾 Заказ оформлен! (функционал добавим позже)");
+    async function makeOrder() {
+        if (!confirm("Подтвердить оформление заказа?")) return;
+
+        const response = await fetch("http://localhost:8080/api/orders/place", {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + getToken() }
+        });
+
+        if (response.ok) {
+            alert("✅ Заказ успешно оформлен!");
+            loadCart(); // корзина очистится
+        } else {
+            const error = await response.text();
+            alert("❌ Ошибка: " + error);
+        }
     }
 
     function goBack() {
