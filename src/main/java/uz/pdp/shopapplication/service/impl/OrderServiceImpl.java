@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.pdp.shopapplication.dto.OrderDto;
 import uz.pdp.shopapplication.dto.OrderItemDto;
+import uz.pdp.shopapplication.dto.OrderSummaryDto;
 import uz.pdp.shopapplication.entity.Cart;
 import uz.pdp.shopapplication.entity.Order;
 import uz.pdp.shopapplication.entity.OrderItem;
@@ -106,5 +107,19 @@ public class OrderServiceImpl implements OrderService {
                                         i.getPrice()))
                                 .collect(Collectors.toList())
                 )).collect(Collectors.toList());
+    }
+
+    @Override
+    public OrderSummaryDto getMyOrdersSummary() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Order> orders = orderRepository.findByUserId(user.getId());
+        long count = orders.size();
+        BigDecimal total = orders.stream()
+                .map(Order::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new OrderSummaryDto(count, total);
     }
 }

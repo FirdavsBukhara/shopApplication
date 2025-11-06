@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uz.pdp.shopapplication.dto.OrderDto;
+import uz.pdp.shopapplication.dto.OrderSummaryDto;
 import uz.pdp.shopapplication.entity.Order;
 import uz.pdp.shopapplication.service.OrderService;
 
@@ -25,6 +26,11 @@ public class OrderController {
     @GetMapping("/my")
     public ResponseEntity<List<OrderDto>> getOrders() {
         return ResponseEntity.ok(orderService.getOrders());
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<OrderSummaryDto> summary() {
+        return ResponseEntity.ok(orderService.getMyOrdersSummary());
     }
 
 }

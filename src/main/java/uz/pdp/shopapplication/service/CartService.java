@@ -10,12 +10,11 @@ import java.util.List;
 
 public interface CartService {
 
-    CartDto getUserCart(UserDto userDto);
+    CartDto getUserCart();
 
-    void addToCart(UserDto userDto, Long productId, int quantity);
+    void addToCart(Long productId, int quantity);
 
-    void removeFromCart(UserDto userDto, Long productId);
+    void clearCart();
 
-    void clearCart(UserDto userDto);
-
+    void removeItem(Long itemId);
 }

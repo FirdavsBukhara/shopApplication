@@ -86,6 +86,13 @@
 <h2>Список товаров</h2>
 <span class="logout" onclick="logout()">Выйти</span>
 
+<div id="userInfo" style="margin-bottom:12px;">
+    <span id="balanceText">Баланс: ...</span>
+    <span style="margin-left:20px;">Заказы: <span id="ordersCount">0</span></span>
+    <span style="margin-left:8px;">Потрачено: <span id="ordersSum">0.00</span> USD</span>
+</div>
+
+
 <div class="category-list" id="categoryList"></div>
 <div id="adminControls" style="margin: 15px 0;"></div>
 <div id="products"></div>
@@ -93,6 +100,24 @@
 <button class="add-btn" onclick="goToCart()">🛒 Перейти в корзину</button>
 
 <script>
+    async function fetchJson(url, options = {}) {
+        const token = localStorage.getItem("token");
+        const headers = {
+            ...(options.headers || {}),
+            "Authorization": `Bearer ${token}`,
+        };
+        if (!(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
+        const res = await fetch(url, {...options, headers});
+        if (res.status === 401) {
+            alert("Сессия истекла. Войдите снова.");
+            localStorage.removeItem("token");
+            window.location.href = "/login.html";
+            return null;
+        }
+        if (res.status === 204) return null;
+        return await res.json();
+    }
+
     function goToCart() {
         window.location.href = "/cart.html";
     }
@@ -236,6 +261,19 @@
         window.location.href = `/editProduct.html?productId=${id}`;
     }
 
+    async function updateUserInfo() {
+        const data = await authFetch("http://localhost:8080/api/cart");
+        if (data) {
+            document.getElementById("balanceText").innerText =
+                `Баланс: ${Number(data.userBalance || 0).toLocaleString('ru-RU', {minimumFractionDigits: 2})} USD`;
+            document.getElementById("ordersCount").innerText = data.orderCount ?? 0;
+            document.getElementById("ordersSum").innerText =
+                Number(data.totalSpent || 0).toLocaleString('ru-RU', {minimumFractionDigits: 2});
+        }
+    }
+
+
+
     function logout() {
         localStorage.removeItem("token");
         localStorage.removeItem("username");
@@ -243,6 +281,7 @@
     }
 
     loadCategories();
+    updateUserInfo();
 
     async function deleteProduct(id) {
         if (!confirm("Вы уверены, что хотите удалить этот товар?")) return;
@@ -259,6 +298,7 @@
             alert("❌ Ошибка при удалении товара");
         }
     }
+
     async function addToCart(productId) {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -272,7 +312,7 @@
 
         const response = await fetch(`http://localhost:8080/api/cart/add?productId=${productId}&quantity=${quantity}`, {
             method: "POST",
-            headers: { "Authorization": "Bearer " + token }
+            headers: {"Authorization": "Bearer " + token}
         });
 
         if (response.ok) {
@@ -281,6 +321,8 @@
             alert("❌ Ошибка при добавлении в корзину!");
         }
     }
+
+
 </script>
 
 </body>

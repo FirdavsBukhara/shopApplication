@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Мои заказы</title></head>
+<body>
+<h2>Мои заказы</h2>
+<button onclick="window.location.href='/products.html'">← К товарам</button>
+<div id="ordersSummary"></div>
+<div id="ordersList"></div>
+
+<script>
+    const API = "http://localhost:8080";
+
+    async function fetchJsonSimple(url, options={}) {
+        const token = localStorage.getItem("token");
+        const headers = {...(options.headers||{}), "Authorization": "Bearer " + token};
+        const res = await fetch(url, {...options, headers});
+        if (res.status===401) { alert("Сессия истекла"); location.href="/login.html"; return null; }
+        return await res.json();
+    }
+
+    async function loadOrders() {
+        const list = await fetchJsonSimple(API + "/api/orders/my");
+        const summary = await fetchJsonSimple(API + "/api/orders/summary");
+        document.getElementById("ordersSummary").innerHTML =
+            `<p>Заказов: ${summary.ordersCount} — Потрачено: ${Number(summary.totalSpent).toLocaleString('ru-RU',{minimumFractionDigits:2})} USD</p>`;
+
+        const container = document.getElementById("ordersList");
+        container.innerHTML = "";
+        if (!list || list.length===0) { container.innerHTML="<p>Заказы отсутствуют</p>"; return; }
+        list.forEach(o => {
+            const el = document.createElement("div");
+            el.style.border="1px solid #ddd"; el.style.padding="8px"; el.style.margin="8px";
+            let itemsHtml = o.items.map(i => `<div>${i.productName} — ${i.quantity} × ${Number(i.price).toLocaleString('ru-RU',{minimumFractionDigits:2})} USD</div>`).join("");
+            el.innerHTML = `<b>Заказ #${o.id}</b> — ${new Date(o.createdAt).toLocaleString()} — Итого: ${Number(o.totalPrice).toLocaleString('ru-RU',{minimumFractionDigits:2})} USD<br>${itemsHtml}`;
+            container.appendChild(el);
+        });
+    }
+
+    loadOrders();
+</script>
+</body>
+</html>

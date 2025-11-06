@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -14,8 +15,21 @@ import java.util.List;
 @Builder
 public class CartDto {
 
-    private Long id;
-    private String username;
     private List<CartItemDto> items;
+    private BigDecimal total;
+    private BigDecimal userBalance;
+    private int orderCount;
+    private BigDecimal totalSpent;
 
+    public CartDto(List<CartItemDto> items) {
+        this.items = items;
+        this.total = calculateTotal(items);
+    }
+
+    private BigDecimal calculateTotal(List<CartItemDto> items) {
+        if (items == null || items.isEmpty()) return BigDecimal.ZERO;
+        return items.stream()
+                .map(i -> i.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 }

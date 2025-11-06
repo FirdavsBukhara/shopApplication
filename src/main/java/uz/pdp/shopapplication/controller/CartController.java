@@ -27,28 +27,28 @@ public class CartController {
     }
 
     @GetMapping
-    public ResponseEntity<?>getUserCart(@AuthenticationPrincipal UserDetails userDetails){
-        return ResponseEntity.ok(cartService.getUserCart(getCurrentUserDto(userDetails)));
+    public ResponseEntity<?> getUserCart(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(cartService.getUserCart());
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?>addToCart(@AuthenticationPrincipal UserDetails userDetails,
-                                      @RequestParam Long productId,
-                                      @RequestParam(defaultValue = "1") int quantity){
-        cartService.addToCart(getCurrentUserDto(userDetails), productId, quantity);
+    public ResponseEntity<?> addToCart(
+            @RequestParam Long productId,
+            @RequestParam(defaultValue = "1") int quantity) {
+        cartService.addToCart(productId, quantity);
         return ResponseEntity.ok("Product added to the cart");
     }
 
-    @DeleteMapping("/remove/{productId}")
-    public ResponseEntity<?>removeFromCart(@AuthenticationPrincipal UserDetails userDetails,
-                                           @PathVariable Long productId){
-        cartService.removeFromCart(getCurrentUserDto(userDetails),productId);
+    @DeleteMapping("/remove/{itemtId}")
+    public ResponseEntity<?> removeFromCart(@AuthenticationPrincipal UserDetails userDetails,
+                                            @PathVariable Long itemtId) {
+        cartService.removeItem(itemtId);
         return ResponseEntity.ok("Product removed from the cart");
     }
 
     @DeleteMapping("/clear")
-    public ResponseEntity<?>clearCart(@AuthenticationPrincipal UserDetails userDetails) {
-        cartService.clearCart(getCurrentUserDto(userDetails));
+    public ResponseEntity<?> clearCart() {
+        cartService.clearCart();
         return ResponseEntity.ok("Cart cleared");
     }
 }

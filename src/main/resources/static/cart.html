@@ -48,6 +48,11 @@
     </style>
 </head>
 <body>
+<div id="cartHeader" style="margin-bottom:12px;">
+    <span id="balanceCart">Баланс: 0.00 USD</span>
+    <span style="margin-left:20px;">Заказы: <span id="ordersCountCart">0</span></span>
+    <span style="margin-left:8px;">Потрачено: <span id="ordersSumCart">0.00</span> USD</span>
+</div>
 
 <h2>🛒 Моя корзина</h2>
 <span class="logout" onclick="logout()">Выйти</span>
@@ -65,6 +70,16 @@
 
     function getToken() {
         return localStorage.getItem("token");
+    }
+    async function updateCartHeader() {
+        const data = await authFetch("http://localhost:8080/api/cart");
+        if (data) {
+            document.getElementById("balanceCart").innerText =
+                `Баланс: ${Number(data.userBalance).toLocaleString('ru-RU', {minimumFractionDigits:2})} USD`;
+            document.getElementById("ordersCountCart").innerText = data.orderCount ?? 0;
+            document.getElementById("ordersSumCart").innerText =
+                Number(data.totalSpent ?? 0).toLocaleString('ru-RU', {minimumFractionDigits:2});
+        }
     }
 
     async function authFetch(url, options = {}) {
@@ -121,13 +136,13 @@
         cartDiv.appendChild(totalDiv);
     }
 
-    async function removeItem(productId) {
+    async function removeItem(itemId) {
         if (!confirm("Удалить этот товар из корзины?")) return;
-        await fetch(`${API_URL}/remove/${productId}`, {
+        await fetch(`${API_URL}/remove/${itemId}`, {
             method: "DELETE",
             headers: { "Authorization": "Bearer " + getToken() }
         });
-        loadCart();
+        await loadCart();
     }
 
     async function clearCart() {
@@ -142,19 +157,22 @@
     async function makeOrder() {
         if (!confirm("Подтвердить оформление заказа?")) return;
 
-        const response = await fetch("http://localhost:8080/api/orders/place", {
+        const res = await fetch("http://localhost:8080/api/orders/place", {
             method: "POST",
             headers: { "Authorization": "Bearer " + getToken() }
         });
 
-        if (response.ok) {
+        if (res.ok) {
             alert("✅ Заказ успешно оформлен!");
-            loadCart(); // корзина очистится
+            await loadCart();           // обновить корзину (пустая)
+            await updateCartHeader();   // обновить баланс и summary
+            // если у тебя есть orders.html на странице — можно также перезагрузить список заказов там (см ниже)
         } else {
-            const error = await response.text();
-            alert("❌ Ошибка: " + error);
+            const text = await res.text();
+            alert("❌ Ошибка:  User balance is less than total price\" " + text);
         }
     }
+
 
     function goBack() {
         window.location.href = "/products.html";
@@ -165,6 +183,7 @@
         window.location.href = "/login.html";
     }
     loadCart();
+    updateCartHeader();
 </script>
 </body>
 </html>
